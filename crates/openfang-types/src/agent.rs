@@ -88,7 +88,7 @@ impl Default for AutonomousConfig {
             quiet_hours: None,
             max_iterations: 50,
             max_restarts: 10,
-            heartbeat_interval_secs: 30,
+            heartbeat_interval_secs: 150,
             heartbeat_channel: None,
         }
     }
@@ -721,7 +721,7 @@ mod tests {
         let cfg = AutonomousConfig::default();
         assert_eq!(cfg.max_iterations, 50);
         assert_eq!(cfg.max_restarts, 10);
-        assert_eq!(cfg.heartbeat_interval_secs, 30);
+        assert_eq!(cfg.heartbeat_interval_secs, 150);
         assert!(cfg.quiet_hours.is_none());
     }
 

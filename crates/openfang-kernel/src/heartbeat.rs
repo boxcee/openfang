@@ -143,12 +143,16 @@ pub fn check_agents(registry: &AgentRegistry, config: &HeartbeatConfig) -> Vec<H
 
         let inactive_secs = (now - entry_ref.last_active).num_seconds();
 
-        // Determine timeout: use agent's autonomous config if set, else default
-        let timeout_secs = entry_ref
+        // Determine timeout: use agent's autonomous config if set, else default.
+        // Always respect the global minimum — per-agent values below the global
+        // default are overridden (prevents stale defaults from causing false crashes).
+        let per_agent = entry_ref
             .manifest
             .autonomous
             .as_ref()
-            .map(|a| a.heartbeat_interval_secs * UNRESPONSIVE_MULTIPLIER)
+            .map(|a| a.heartbeat_interval_secs * UNRESPONSIVE_MULTIPLIER);
+        let timeout_secs = per_agent
+            .map(|t| t.max(config.default_timeout_secs))
             .unwrap_or(config.default_timeout_secs) as i64;
 
         // Crashed agents are always considered unresponsive
