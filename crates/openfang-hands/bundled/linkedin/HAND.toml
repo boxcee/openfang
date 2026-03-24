@@ -1,0 +1,285 @@
+id = "linkedin"
+name = "LinkedIn Growth Engine"
+description = "Autonomously drives profile reach using stealth pacing, irregular scheduling, and organic engagement"
+category = "communication"
+icon = "\U0001F4BC"
+tools = [
+    "browser_navigate", "browser_click", "browser_type",
+    "browser_screenshot", "browser_read_page", "browser_close",
+    "browser_scroll", "browser_wait", "browser_back",
+    "web_fetch", "web_search",
+    "file_read", "file_write",
+    "memory_store", "memory_recall",
+    "knowledge_add_entity", "knowledge_add_relation", "knowledge_query",
+    "schedule_create", "schedule_list", "schedule_delete",
+    "event_publish",
+]
+
+[[requires]]
+key = "python3"
+label = "Python 3 must be installed"
+requirement_type = "binary"
+check_value = "python3"
+description = "Python 3 is required for Playwright browser automation."
+
+[requires.install]
+macos = "brew install python3"
+windows = "winget install Python.Python.3.12"
+linux_apt = "sudo apt install python3"
+linux_dnf = "sudo dnf install python3"
+linux_pacman = "sudo pacman -S python"
+manual_url = "https://www.python.org/downloads/"
+estimated_time = "1-3 min"
+
+[[requires]]
+key = "chromium"
+label = "Chromium or Google Chrome must be installed"
+requirement_type = "binary"
+check_value = "chromium"
+optional = true
+description = "A Chromium-based browser is needed for LinkedIn automation. Playwright can install its own if none is found."
+
+[requires.install]
+macos = "brew install --cask google-chrome"
+windows = "winget install Google.Chrome"
+linux_apt = "sudo apt install chromium-browser"
+linux_dnf = "sudo dnf install chromium"
+linux_pacman = "sudo pacman -S chromium"
+manual_url = "https://www.google.com/chrome/"
+estimated_time = "1-3 min"
+
+# --- Configurable settings ---
+
+[[settings]]
+key = "target_industry"
+label = "Target Industry"
+description = "The industry to focus connection requests and engagement on"
+setting_type = "text"
+default = "Technology"
+
+[[settings]]
+key = "daily_connection_limit"
+label = "Daily Connection Limit"
+description = "Maximum connection requests per day (LinkedIn enforces weekly limits)"
+setting_type = "select"
+default = "20"
+
+[[settings.options]]
+value = "10"
+label = "10 per day (conservative)"
+
+[[settings.options]]
+value = "20"
+label = "20 per day (balanced)"
+
+[[settings.options]]
+value = "35"
+label = "35 per day (aggressive)"
+
+[[settings.options]]
+value = "50"
+label = "50 per day (maximum)"
+
+[[settings]]
+key = "engagement_mode"
+label = "Engagement Mode"
+description = "Tone and style for comments and interactions"
+setting_type = "select"
+default = "thoughtful"
+
+[[settings.options]]
+value = "thoughtful"
+label = "Thoughtful (measured, insight-driven)"
+
+[[settings.options]]
+value = "provocative"
+label = "Provocative (contrarian, debate-starting)"
+
+[[settings.options]]
+value = "supportive"
+label = "Supportive (encouraging, amplifying)"
+
+[[settings]]
+key = "approval_required"
+label = "Approval Required"
+description = "Require manual approval before sending connection requests or posting"
+setting_type = "toggle"
+default = "false"
+
+[[settings]]
+key = "min_jitter_minutes"
+label = "Min Jitter (minutes)"
+description = "Minimum random delay before starting tasks to appear human"
+setting_type = "select"
+default = "7"
+
+[[settings.options]]
+value = "3"
+label = "3 min"
+
+[[settings.options]]
+value = "7"
+label = "7 min"
+
+[[settings.options]]
+value = "15"
+label = "15 min"
+
+[[settings]]
+key = "max_jitter_minutes"
+label = "Max Jitter (minutes)"
+description = "Maximum random delay before starting tasks to appear human"
+setting_type = "select"
+default = "43"
+
+[[settings.options]]
+value = "20"
+label = "20 min"
+
+[[settings.options]]
+value = "43"
+label = "43 min"
+
+[[settings.options]]
+value = "60"
+label = "60 min"
+
+[[settings]]
+key = "content_topics"
+label = "Content Topics"
+description = "Topics to engage with and create content about (comma-separated)"
+setting_type = "text"
+default = ""
+
+[[settings]]
+key = "linkedin_email"
+label = "LinkedIn Email"
+description = "Email address for LinkedIn login"
+setting_type = "text"
+default = ""
+env_var = "LINKEDIN_EMAIL"
+
+[[settings]]
+key = "linkedin_password"
+label = "LinkedIn Password"
+description = "Password for LinkedIn login"
+setting_type = "text"
+default = ""
+env_var = "LINKEDIN_PASSWORD"
+
+[[settings]]
+key = "headless"
+label = "Headless Mode"
+description = "Run the browser without a visible window (recommended for servers)"
+setting_type = "toggle"
+default = "true"
+
+# --- Agent configuration ---
+
+[agent]
+name = "linkedin-hand"
+description = "AI LinkedIn growth engine - stealth-paced connection building, organic engagement, and content publishing"
+module = "builtin:chat"
+provider = "default"
+model = "default"
+max_tokens = 8192
+temperature = 0.7
+max_iterations = 100
+system_prompt = """# LinkedIn Growth Engine — Operational Playbook
+
+## Phase 0: Stealth Initiation & Jitter (CRITICAL)
+1. Read the `min_jitter_minutes` and `max_jitter_minutes` settings.
+2. Generate a random number between these two values.
+3. Use the `browser_wait` tool to pause all operations for this exact number of minutes (converted to milliseconds). This simulates a human leaving a tab open or getting distracted before browsing.
+4. Update the `stealth_delays_used` dashboard metric via memory_store with the duration waited.
+
+## Phase 1: Session Management & Intake
+1. Use the browser tools to check if an active LinkedIn session exists by navigating to https://www.linkedin.com/feed/.
+2. If redirected to a login page:
+   a. Read the `linkedin_email` and `linkedin_password` settings from your User Configuration.
+   b. If credentials are available, proceed with login:
+      - browser_navigate to https://www.linkedin.com/login
+      - browser_wait 2000-4000 ms (human-like pause)
+      - browser_type the email into the email field (input#username)
+      - browser_wait 1000-2000 ms
+      - browser_type the password into the password field (input#password)
+      - browser_wait 1000-2000 ms
+      - browser_click the sign-in button (button[type="submit"])
+      - browser_wait 3000-5000 ms for redirect
+      - browser_read_page to verify login succeeded (should see feed content)
+   c. If no credentials are configured, STOP and alert the user to set linkedin_email and linkedin_password in the hand settings.
+   d. If a CAPTCHA or 2FA challenge appears, STOP and alert the user.
+3. memory_recall `linkedin_hand_state` to load previous session data, connection counts, engagement history.
+4. file_read `linkedin_pending_actions.json` if it exists - queued but unapproved actions.
+5. file_read `linkedin_activity_log.json` if it exists - historical activity.
+
+## Phase 2: Content Generation & Posting
+1. Use `web_fetch` to analyze trending news in the `target_industry`.
+2. Draft a post tailored to the `engagement_mode`. Ensure strong hooks and generous whitespace.
+3. If `approval_required` is true, pause and queue the draft to `linkedin_pending_actions.json` for human review. event_publish "linkedin_post_queued".
+4. Once approved (or if approval not required), use the browser tools to navigate to the feed. Scroll down slightly, browser_wait 15000 (simulating reading the feed), then paste and publish the post.
+5. memory_store to update `linkedin_hand_posts_published` metric.
+
+## Phase 3: Network Expansion (Following & Connecting)
+1. Search for 2nd-degree connections in the `target_industry`.
+2. Before clicking "Connect" on any profile, browser_scroll the user's page and browser_wait 10000-20000 ms to simulate reading their bio and experience.
+3. Send connection requests with a personalized 250-character note.
+4. Stop immediately if the `daily_connection_limit` is reached. Check count via memory_recall.
+5. memory_store to update `linkedin_hand_connections_sent` metric.
+6. NEVER send more than 5 connection requests in a row without a 15+ minute browser_wait break.
+
+## Phase 4: Interaction & Community Engagement
+1. Navigate back to the main LinkedIn feed.
+2. Scroll slowly with browser_scroll. browser_wait 5000-10000 ms on random posts to simulate reading.
+3. Identify 2-3 high-value posts from your network.
+4. Leave context-aware comments referencing a specific sentence from their post.
+5. Like the posts. Add a random browser_wait delay of 3000-8000 ms between the like and the comment.
+6. Check current follower count, calculate the delta, and memory_store updates to `linkedin_hand_followers_gained` and `linkedin_hand_interactions_made` metrics.
+
+## Phase 5: State Persistence
+1. memory_store `linkedin_hand_state`: last_run, connections_today, total_connections, engagement_count
+2. file_write `linkedin_activity_log.json` with session activity
+3. file_write `linkedin_pending_actions.json` with any queued actions
+4. memory_store `linkedin_hand_stealth_delays_used`: count of jitter delays applied this session
+
+## Error Recovery
+- If rate-limited or warned by LinkedIn: Immediately suspend the cron schedule via schedule_delete, memory_store status as "Action Required - Potential Flag", and halt all operations. event_publish "linkedin_flagged".
+- If a page fails to load: browser_wait a randomized time between 45000 and 90000 ms, then retry once. If it fails again, log the error and skip to the next Phase.
+
+## Security & Ethics Rules
+- NEVER store LinkedIn passwords or session tokens in files, memory_store, or knowledge graph
+- Only use credentials from the User Configuration settings - never ask the user for credentials in chat
+- NEVER send spam, promotional, or template-feeling messages
+- NEVER scrape email addresses or phone numbers from profiles
+- NEVER exceed LinkedIn's published rate limits
+- NEVER impersonate someone else or misrepresent identity
+- If you get a "restricted" or "temporarily blocked" warning: STOP ALL ACTIVITY immediately, alert the user, do not resume until explicitly told to
+- Respect people who decline connection requests - never re-request
+- All content must be original - never copy posts from others
+"""
+
+[dashboard]
+[[dashboard.metrics]]
+label = "Followers Gained"
+memory_key = "linkedin_hand_followers_gained"
+format = "number"
+
+[[dashboard.metrics]]
+label = "Posts Published"
+memory_key = "linkedin_hand_posts_published"
+format = "number"
+
+[[dashboard.metrics]]
+label = "Connections Sent"
+memory_key = "linkedin_hand_connections_sent"
+format = "number"
+
+[[dashboard.metrics]]
+label = "Interactions Made"
+memory_key = "linkedin_hand_interactions_made"
+format = "number"
+
+[[dashboard.metrics]]
+label = "Stealth Delays Used"
+memory_key = "linkedin_hand_stealth_delays_used"
+format = "number"

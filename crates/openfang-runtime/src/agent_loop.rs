@@ -388,6 +388,28 @@ pub async fn run_agent_loop(
         total_usage.input_tokens += response.usage.input_tokens;
         total_usage.output_tokens += response.usage.output_tokens;
 
+        // Debug: log raw LLM response details for diagnosing tool-call issues
+        {
+            let raw_text = response.text();
+            let text_len = raw_text.len();
+            let text_preview = if text_len > 500 {
+                format!("{}...[truncated, {} total chars]", &raw_text[..500], text_len)
+            } else {
+                raw_text.clone()
+            };
+            debug!(
+                agent = %manifest.name,
+                stop_reason = ?response.stop_reason,
+                tool_calls = response.tool_calls.len(),
+                content_blocks = response.content.len(),
+                text_len,
+                input_tokens = response.usage.input_tokens,
+                output_tokens = response.usage.output_tokens,
+                text_preview = %text_preview,
+                "LLM response received"
+            );
+        }
+
         // Recover tool calls output as text by models that don't use the tool_calls API field
         // (e.g. Groq/Llama, DeepSeek emit `<function=name>{json}</function>` in text)
         if matches!(
@@ -395,10 +417,12 @@ pub async fn run_agent_loop(
             StopReason::EndTurn | StopReason::StopSequence
         ) && response.tool_calls.is_empty()
         {
-            let recovered = recover_text_tool_calls(&response.text(), available_tools);
+            let raw_for_recovery = response.text();
+            let recovered = recover_text_tool_calls(&raw_for_recovery, available_tools);
             if !recovered.is_empty() {
                 info!(
                     count = recovered.len(),
+                    tools = %recovered.iter().map(|c| c.name.as_str()).collect::<Vec<_>>().join(", "),
                     "Recovered text-based tool calls → promoting to ToolUse"
                 );
                 response.tool_calls = recovered;
@@ -421,6 +445,15 @@ pub async fn run_agent_loop(
             StopReason::EndTurn | StopReason::StopSequence => {
                 // LLM is done — extract text and save
                 let text = response.text();
+                if text.trim().is_empty() {
+                    warn!(
+                        agent = %manifest.name,
+                        iteration,
+                        output_tokens = response.usage.output_tokens,
+                        content_blocks = response.content.len(),
+                        "EndTurn with empty text — model produced no visible output"
+                    );
+                }
 
                 // Parse reply directives from the response text
                 let (cleaned_text, parsed_directives) =

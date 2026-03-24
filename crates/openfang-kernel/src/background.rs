@@ -72,6 +72,24 @@ impl BackgroundExecutor {
                 );
 
                 let handle = tokio::spawn(async move {
+                    // Stagger first tick: random delay up to the full interval
+                    // so hands don't all fire at the same time competing for LLM slots.
+                    let jitter = {
+                        use std::hash::{Hash, Hasher};
+                        let mut hasher = std::collections::hash_map::DefaultHasher::new();
+                        agent_id.hash(&mut hasher);
+                        let hash = hasher.finish();
+                        std::time::Duration::from_secs(hash % interval.as_secs().max(1))
+                    };
+                    info!(agent = %name, jitter_secs = jitter.as_secs(), "Staggering first tick");
+                    tokio::select! {
+                        _ = tokio::time::sleep(jitter) => {}
+                        _ = shutdown.changed() => {
+                            info!(agent = %name, "Continuous loop: shutdown signal received during jitter");
+                            return;
+                        }
+                    }
+
                     loop {
                         tokio::select! {
                             _ = tokio::time::sleep(interval) => {}

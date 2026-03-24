@@ -1111,16 +1111,25 @@ pub struct HeartbeatSettings {
     /// Default: 180. Set higher to prevent idle hands from being marked as crashed.
     #[serde(default = "default_heartbeat_timeout")]
     pub default_timeout_secs: u64,
+    /// Background tick interval for autonomous hands (seconds).
+    /// Default: 300. Controls how often hands check in and run their loop.
+    #[serde(default = "default_hand_tick_interval")]
+    pub hand_tick_interval_secs: u64,
 }
 
 fn default_heartbeat_timeout() -> u64 {
     180
 }
 
+fn default_hand_tick_interval() -> u64 {
+    300
+}
+
 impl Default for HeartbeatSettings {
     fn default() -> Self {
         Self {
             default_timeout_secs: default_heartbeat_timeout(),
+            hand_tick_interval_secs: default_hand_tick_interval(),
         }
     }
 }

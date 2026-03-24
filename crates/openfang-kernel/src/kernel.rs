@@ -3304,7 +3304,7 @@ impl OpenFangKernel {
             // Reactive (default) only fires on incoming messages, so autonomous hands would be inert.
             schedule: if def.agent.max_iterations.is_some() {
                 ScheduleMode::Continuous {
-                    check_interval_secs: 60,
+                    check_interval_secs: self.config.heartbeat.hand_tick_interval_secs,
                 }
             } else {
                 ScheduleMode::default()
